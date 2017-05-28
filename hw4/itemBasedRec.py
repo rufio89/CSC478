@@ -89,19 +89,38 @@ def cross_validate_user(dataMat, user, test_ratio, estMethod=standEst, simMeas=p
 	return error_u, count_u
 	
 def test(dataMat, test_ratio, estMethod):
-    # Write this function to iterate over all users and for each perform cross-validation on items by calling
-	# the above cross-validation function on each user.
-	# MAE will be the ratio of total error across all test cases to the total number of test cases, for all users
-	print 'Mean Absoloute Error for ',estMethod,' : ', MAE
+	ttl_error=0.0
+	ttl_test=0.0
+	for index, user in enumerate(dataMat):
+		error, count =  cross_validate_user(dataMat, index, test_ratio, estMethod)
+		ttl_error+=error
+		ttl_test+= count
+	mean_error=ttl_error/ttl_test
+	print 'Mean Absoloute Error for ',estMethod,' : ', mean_error
 
 def print_most_similar_jokes(dataMat, jokes, queryJoke, k, metric=pearsSim):
-	# Write this function to find the k most similar jokes (based on user ratings) to a queryJoke
-	# The queryJoke is a joke id as given in the 'jokes.csv' file (an corresponding to the a column in dataMat)
-	# You must compare ratings for the queryJoke (the column in dataMat corresponding to the joke), to all
-	# other joke rating vectors and return the top k. Note that this is the same as performing KNN on the 
-    # columns of dataMat. The function must retrieve the text of the joke from 'jokes.csv' file and print both
-	# the queryJoke text as well as the text of the returned jokes.
-	print 'Joke'
+    distances = []
+    targets = []
+    data = dataMat.T
+
+    for i in range(len(data)):
+        distance = metric(data[queryJoke], data[i])
+        distances.append([distance, i])
+
+    distances = sorted(distances, reverse=True)
+    distances = distances[1:]
+
+    for i in range(k):
+        index = distances[i][1]
+        targets.append(jokes[index])
+
+    print 'Selected Joke: \n'
+    print jokes[queryJoke]
+
+    print 'Top ' + str(k) + ' Recommended Jokes Are: \n'
+    for joke in targets:
+        print joke + '\n'
+
 def load_jokes(file):
 	jokes = genfromtxt(file, delimiter=',', dtype=str)
 	jokes = np.array(jokes[:,1])
